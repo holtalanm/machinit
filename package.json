@@ -1,0 +1,11 @@
+{
+  "name": "machinit",
+  "version": "0.0.1",
+  "description": "Allows for initializing a newly created machine using a lightweight and simple form factor (json).",
+  "main": "machinit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alan Holt",
+  "license": "ISC"
+}
