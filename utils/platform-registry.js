@@ -1,14 +1,12 @@
 const registry = {};
 
-function registerPlatform(name, checkFunction, initFunction, pushFunction, pullFunction, aliasArray) {
-    aliasArray.push(name);
-    registry[name] = {
-        aliases: aliasArray,
-        check: checkFunction,
-        init: initFunction,
-        push: pushFunction,
-        pull: pullFunction
-    };
+function registerPlatform(platform) {
+    if(!platform.name || !platform.aliasArray || !platform.init || !platform.push || !platform.pull || !platform.check) {
+        console.error('Invalid Platform: ' + platform);
+        return;
+    }
+    platform.aliasArray.push(platform.name);
+    registry[platform.name] = platform;
 }
 
 function getPlatform() {

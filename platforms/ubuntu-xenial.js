@@ -9,7 +9,7 @@ function checkIfXenial() {
 
 function cdToDir(dir) {
     var result = shell.cd(dir);
-    if(result.grep('no such').stderr.length > 5) {
+    if(result.stderr && result.stderr.length > 5) {
         result = shell.mkdir('-p', dir);
     }
     shell.cd(dir);
@@ -52,10 +52,17 @@ function pull(initDir) {
     return shell.exec('git pull origin master')
 }
 
-module.exports = registry.register('Ubuntu-Xenial', checkIfXenial, init, push, pull, [
-    'Ubuntu 16.04',
-    'Ubuntu16.04',
-    'Ubuntu1604',
-    'XenialUbuntu',
-    'UbuntuXenial'
-]);
+module.exports = registry.register({
+    name: 'Ubuntu-Xenial',
+    aliasArray: [
+        'Ubuntu 16.04',
+        'Ubuntu16.04',
+        'Ubuntu1604',
+        'XenialUbuntu',
+        'UbuntuXenial'
+    ],
+    check: checkIfXenial,
+    init: init,
+    push: push,
+    pull: pull
+});
