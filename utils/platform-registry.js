@@ -1,9 +1,13 @@
 const registry = {};
 
-function registerPlatform(name, checkFunction, aliasArray) {
+function registerPlatform(name, checkFunction, initFunction, pushFunction, pullFunction, aliasArray) {
+    aliasArray.push(name);
     registry[name] = {
         aliases: aliasArray,
-        check: checkFunction
+        check: checkFunction,
+        init: initFunction,
+        push: pushFunction,
+        pull: pullFunction
     };
 }
 

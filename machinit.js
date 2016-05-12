@@ -5,14 +5,14 @@ require('./platforms/ubuntu-xenial.js');
 
 
 const cli = clc([
-   { name: 'platform' }
+   { name: 'init', definitions: [ { name: 'dir', type: String } ] }
 ]);
 
 const command = cli.parse();
 
 switch(command.name) {
-    case 'platform':
-        console.log(platforms.get());
+    case 'init':
+        platforms.get().init(command.options.dir);
         break;
     default:
         console.log('Unknown command: ' + command.name);

@@ -2,7 +2,7 @@
     'platforms': [
         'Ubuntu 16.04'
     ],
-    'repository': 'local',
+    'repository': 'auto',
     'packages': [
         {
             'name': 'Mongo DB',
