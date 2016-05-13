@@ -7,49 +7,12 @@ function checkIfXenial() {
     return result.stdout.length > 5;
 }
 
-function cdToDir(dir) {
-    var result = shell.cd(dir);
-    if(result.stderr && result.stderr.length > 5) {
-        result = shell.mkdir('-p', dir);
-    }
-    shell.cd(dir);
-    return result;
+function updateSystem(data) {
+
 }
 
-function ensureGitInstalled() {
-    if(!(shell.which('git').stdout.length > 2)) {
-        shell.exec('apt-get install git -y -q');
-    }
-}
+function updateRepo(data) {
 
-function isInGitRepo() {
-    ensureGitInstalled();
-    var result = shell.exec('git status');
-    return !(result.stderr);
-}
-
-function init(initDir) {
-    if(!initDir) initDir = defaultInitDir;
-    var result = cdToDir(initDir);
-    if(!isInGitRepo()) {
-        result = result.exec('git init');
-    } else {
-        console.log('Already a git repository initialized within directory: ' + initDir + '. If you wish to specify a different directory, please call init with -dir option');
-    }
-}
-
-function push(initDir) {
-    if(!initDir) initDir = defaultInitDir;
-    var result = cdToDir(initDir);
-    ensureGitInstalled();
-    return shell.exec('git push origin master')
-}
-
-function pull(initDir) {
-    if(!initDir) initDir = defaultInitDir;
-    var result = cdToDir(initDir);
-    ensureGitInstalled();
-    return shell.exec('git pull origin master')
 }
 
 module.exports = registry.register({
@@ -59,10 +22,10 @@ module.exports = registry.register({
         'Ubuntu16.04',
         'Ubuntu1604',
         'XenialUbuntu',
-        'UbuntuXenial'
+        'UbuntuXenial',
+        'Ubuntu Xenial'
     ],
     check: checkIfXenial,
-    init: init,
-    push: push,
-    pull: pull
+    updateSystem: updateSystem,
+    updateRepo: updateRepo
 });

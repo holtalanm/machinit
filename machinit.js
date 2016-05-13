@@ -1,18 +1,19 @@
 const clc = require('command-line-commands');
-const platformutil = require('./utils/platform-util.js');
 const platforms = require('./utils/platform-registry.js');
 require('./platforms/ubuntu-xenial.js');
 
 
 const cli = clc([
-   { name: 'init', definitions: [ { name: 'dir', type: String } ] }
+   { name: 'platform' }
 ]);
 
 const command = cli.parse();
 
+
+var platform = platforms.get();
 switch(command.name) {
-    case 'init':
-        platforms.get().init(command.options.dir);
+    case 'platform':
+        console.log(platform ? platform : 'Your current platform is not supported by Machinit and is unknown.');
         break;
     default:
         console.log('Unknown command: ' + command.name);
