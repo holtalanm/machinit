@@ -30,7 +30,8 @@ function getFileContent(dir, file, platform) {
     var content = jsonfile.readFileSync(filepath);
     content.localrepo = dir;
     var supported = false;
-    for(var p in content.platforms) {
+    for(var i = 0; i < content.platforms.length; i++) {
+        var p = content.platforms[i];
         var usedAliases = platform.aliasArray.filter((alias) => {
             return p == alias;
         });
