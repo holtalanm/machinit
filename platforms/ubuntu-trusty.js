@@ -6,7 +6,7 @@ function ensureGitRepo(repo, gitdir) {
     if(!shell.which('git')) {
         shell.exec('apt-get install git');
     }
-    var isGit = shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' status').grep('On branch').length > 5;
+    var isGit = shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' status').stderr.indexOf('branch') > -1;
     if(!isGit) {
         shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' init');
     }
@@ -24,11 +24,14 @@ function updateSystem(data) {
 function updateRepo(data) {
     var repo = data.localrepo;
     var gitdir = repo + '/.git';
-    for(var file in data.files) {
-        var repopath = repo + '/' + file.repopath;
-        var systempath = file.platforms[data.currentplatform].path;
+    for(var i = 0; i < data.files.length; i++) {
+        var file = data.files[i];
+        var filename = file.name;
+        var repopath = repo + '/' + file.repofolder;
+        var systempath = file.platforms[data.currentplatform].path + '/' + filename;
 
-        shell.cp('', systempath, repopath);
+        shell.mkdir('-p', repopath);
+        shell.cp('-r', systempath, repopath + '/' + filename);
     }
 
     ensureGitRepo(repo, gitdir);
