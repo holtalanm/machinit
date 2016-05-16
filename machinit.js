@@ -6,6 +6,7 @@ autoload('./platforms');
 
 
 const cli = clc([
+    { name: 'help' },
     { name: 'platform' },
     {
         name: 'update-system',
@@ -52,6 +53,16 @@ if(!platform) {
     console.log('Your current platform is not supported by Machinit.');
 } else {
     switch(command.name) {
+        case 'help':
+            console.log('Machinit.  The simple way of syncing files between your machines using git.');
+            console.log('commands:');
+            console.log('\thelp:  (ex. "machinit help") lists out the information about the commands and what they do.');
+            console.log('\tplatform: (ex. "machinit platform") prints out the current plaform\'s name, also checks if the current platform is supported');
+            console.log('\tupdate-repo: (ex. "machinit update-repo --dir /opt/machinit/is/awesome") updates the given directory by reading the file called machinit.json within the given directroy');
+            console.log('\t\toptions:');
+            console.log('\t\t\tdir: the directory path for the repository (required)');
+            console.log('\t\t\tfp: the file path for the json file to read.  If not specified, looks for machinit.json within the repository directory.  (optional)');
+            break;
         case 'platform':
             console.log(platform.name);
             break;
