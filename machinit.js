@@ -11,24 +11,22 @@ const cli = clc([
         name: 'update-system',
         definitions: [
             { name: 'dir', type: String },
-            { name: 'file', type: String }
+            { name: 'fp', type: String }
         ]
     },
     {
         name: 'update-repo',
         definitions: [
             { name: 'dir', type: String },
-            { name: 'file', type: String }
+            { name: 'fp', type: String }
         ]
     }
 ]);
 
 const command = cli.parse();
 
-function getFileContent(dir, file, platform) {
-    var filepath = dir + '/' + file;
+function getFileContent(filepath, platform) {
     var content = jsonfile.readFileSync(filepath);
-    content.localrepo = dir;
     var supported = false;
     for(var i = 0; i < content.platforms.length; i++) {
         var p = content.platforms[i];
@@ -58,12 +56,20 @@ if(!platform) {
             console.log(platform.name);
             break;
         case 'update-repo':
-            var content = getFileContent(command.options.dir, command.options.file ? command.options.file : 'machinit.json', platform);
-            if(content) platform.updateRepo(content);
+            var dir = command.options.dir;
+            var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
+            if(content) {
+                content.localrepo = dir;
+                platform.updateRepo(content);
+            }
             break;
         case 'update-system':
-            var content = getFileContent(command.options.dir, command.options.file ? command.options.file : 'machinit.json', platform);
-            if(content) platform.updateSystem(content);
+            var dir = command.options.dir;
+            var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
+            if(content) {
+                content.localrepo = dir;
+                platform.updateSystem(content);
+            }
             break;
         default:
             console.log('Unknown command: ' + command.name);
