@@ -3,42 +3,29 @@ var shell = require('shelljs');
 var urlparse = require('url-parse');
 var defaultInitDir = '/opt/machinit';
 
-function makeNetRC(domain, username, password) {
-    if(shell.ls('~/.netrc').grep('no such').length == 0) {
-        shell.mv('~/.netrc', '~/.old.netrc');
-    }
-    shell.exec('touch ~/.netrc');
-    shell.exec('echo \'machine ' + domain + '\nlogin ' + username + '\npassword ' + password + '\' >> ~/.netrc');
-    shell.exec('source ~/.netrc');
-}
-
-function restoreNetRC() {
-    shell.rm('-rf', '~/.netrc');
-    if(shell.ls('~/.old.netrc').grep('no such').length == 0) {
-        shell.mv('~/.old.netrc', '~/.netrc');
-        shell.exec('source ~/.netrc');
-    }
-}
-
 function ensureGitRepo(repo, gitdir) {
     if(!shell.which('git')) {
-        shell.exec('sudo apt-get install git -y -q');
+        shell.exec('apt-get install git -y -q');
     }
     var status = shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' status');
     var isGit = status.stdout.indexOf('branch') > -1
     if(!isGit) {
-        shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' init');
+        shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' init');
     }
 }
 
 function ensureRemoteAdded(repo, gitdir, repourl) {
+    ensureRemoteRemoved(repo, gitdir);
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote add origin ' + repourl);
+}
+
+function ensureRemoteRemoved(repo, gitdir) {
     ensureGitRepo(repo, gitdir);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote remove origin');
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote add origin ' + repourl);
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote remove origin');
 }
 
 function check() {
-    var result = shell.exec('sudo cat /etc/lsb-release').grep('trusty');
+    var result = shell.exec('cat /etc/lsb-release').grep('trusty');
     return result.stdout.length > 5;
 }
 
@@ -47,17 +34,17 @@ function updateSystem(data) {
     var gitdir = repo + '/.git';
     var remote = data.remote;
     if(data.gitusername && data.gitpassword) {
-        var host = parse(remote).host;
-        makeNetRC(host, data.gitusername, data.gitpassword);
+        var parsedremote = parse(remote);
+        parsedremote.set('auth', data.gitusername + ':' + data.gitpassword);
+        remote = parsedremote.toString();
+        console.log(remote);
     }
     ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' reset HEAD --hard');
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' fetch origin');
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' pull origin');
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' reset HEAD --hard');
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' fetch origin');
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' pull origin');
 
-    if(data.gitusername && data.gitpassword) {
-        restoreNetRC();
-    }
+    ensureRemoteRemoved(repo, gitdir);
 
     for(var i = 0; i < data.packages.length; i++) {
         var package = data.packages[i];
@@ -94,9 +81,16 @@ function updateRepo(data) {
     }
 
     ensureGitRepo(repo, gitdir);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' commit -a -m \'updated repository from system\'');
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' commit -a -m \'updated repository from system\'');
+    if(data.gitusername && data.gitpassword) {
+        var parsedremote = parse(remote);
+        parsedremote.set('auth', data.gitusername + ':' + data.gitpassword);
+        remote = parsedremote.toString();
+        console.log(remote);
+    }
     ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' push origin master');
+    shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' push origin master');
+    ensureRemoteRemoved(repo, gitdir);
 }
 
 module.exports = registry.register({
