@@ -12,6 +12,8 @@ const cli = clc([
         name: 'update-system',
         definitions: [
             { name: 'dir', type: String },
+            { name: 'gituser', type: String },
+            { name: 'gitpw', type: String },
             { name: 'fp', type: String }
         ]
     },
@@ -19,6 +21,8 @@ const cli = clc([
         name: 'update-repo',
         definitions: [
             { name: 'dir', type: String },
+            { name: 'gituser', type: String },
+            { name: 'gitpw', type: String },
             { name: 'fp', type: String }
         ]
     }
@@ -44,8 +48,6 @@ function getFileContent(filepath, platform) {
         console.log('Your current platform is not supported by the given file/repository: ' + platform.name);
         return null;
     } else {
-        content.gitusername = process.env.MACHINIT_GIT_USER;
-        content.gitpassword = process.env.MACHINIT_GIT_PASSWORD;
         return content;
     }
 }
@@ -74,17 +76,25 @@ if(!platform) {
             break;
         case 'update-repo':
             var dir = command.options.dir;
+            var gituser = command.options.gituser;
+            var gitpw = command.options.gitpw;
             var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
             if(content) {
                 content.localrepo = dir;
+                content.gitusername = gituser;
+                content.gitpassword = gitpw;
                 platform.updateRepo(content);
             }
             break;
         case 'update-system':
             var dir = command.options.dir;
+            var gituser = command.options.gituser;
+            var gitpw = command.options.gitpw;
             var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
             if(content) {
                 content.localrepo = dir;
+                content.gitusername = gituser;
+                content.gitpassword = gitpw;
                 platform.updateSystem(content);
             }
             break;

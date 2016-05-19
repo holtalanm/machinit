@@ -5,23 +5,23 @@ var defaultInitDir = '/opt/machinit';
 
 function ensureGitRepo(repo, gitdir) {
     if(!shell.which('git')) {
-        shell.exec('apt-get install git -y -q');
+        shell.exec('sudo apt-get install git -y -q');
     }
-    var status = shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' status');
+    var status = shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' status');
     var isGit = status.stdout.indexOf('branch') > -1
     if(!isGit) {
-        shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' init');
+        shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' init');
     }
 }
 
 function ensureRemoteAdded(repo, gitdir, repourl) {
     ensureRemoteRemoved(repo, gitdir);
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote add origin ' + repourl);
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote add origin ' + repourl);
 }
 
 function ensureRemoteRemoved(repo, gitdir) {
     ensureGitRepo(repo, gitdir);
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote remove origin');
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote remove origin');
 }
 
 function check() {
@@ -29,20 +29,24 @@ function check() {
     return result.stdout.length > 5;
 }
 
-function updateSystem(data) {
-    var repo = data.localrepo;
-    var gitdir = repo + '/.git';
-    var remote = data.remote;
+function setGitAuthOnRemote(data, remote) {
     if(data.gitusername && data.gitpassword) {
-        var parsedremote = parse(remote);
+        var parsedremote = urlparse(remote);
         parsedremote.set('auth', data.gitusername + ':' + data.gitpassword);
         remote = parsedremote.toString();
         console.log(remote);
     }
+    return remote;
+}
+
+function updateSystem(data) {
+    var repo = data.localrepo;
+    var gitdir = repo + '/.git';
+    var remote = setGitAuthOnRemote(data, data.remote);
     ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' reset HEAD --hard');
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' fetch origin');
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree=' + repo + ' pull origin');
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' reset HEAD --hard');
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' fetch origin');
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' pull origin');
 
     ensureRemoteRemoved(repo, gitdir);
 
@@ -69,7 +73,7 @@ function updateSystem(data) {
 function updateRepo(data) {
     var repo = data.localrepo;
     var gitdir = repo + '/.git';
-    var remote = data.remote;
+    var remote = setGitAuthOnRemote(data, data.remote);
     for(var i = 0; i < data.files.length; i++) {
         var file = data.files[i];
         var filename = file.name;
@@ -81,15 +85,9 @@ function updateRepo(data) {
     }
 
     ensureGitRepo(repo, gitdir);
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' commit -a -m \'updated repository from system\'');
-    if(data.gitusername && data.gitpassword) {
-        var parsedremote = parse(remote);
-        parsedremote.set('auth', data.gitusername + ':' + data.gitpassword);
-        remote = parsedremote.toString();
-        console.log(remote);
-    }
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' commit -a -m \'updated repository from system\'');
     ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('git --git-dir=' + gitdir + ' --work-tree ' + repo + ' push origin master');
+    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' push origin master');
     ensureRemoteRemoved(repo, gitdir);
 }
 
