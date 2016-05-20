@@ -1,18 +1,10 @@
 var registry = require('../utils/platform-registry.js');
+var ubuntuplatform = require('./ubuntu-platform.js');
 var shell = require('shelljs');
-var defaultInitDir = '/opt/machinit';
 
 function checkIfXenial() {
     var result = shell.exec('cat /etc/lsb-release').grep('xenial');
     return result.stdout.length > 5;
-}
-
-function updateSystem(data) {
-
-}
-
-function updateRepo(data) {
-
 }
 
 module.exports = registry.register({
@@ -26,6 +18,6 @@ module.exports = registry.register({
         'Ubuntu Xenial'
     ],
     check: checkIfXenial,
-    updateSystem: updateSystem,
-    updateRepo: updateRepo
+    updateSystem: ubuntuplatform.updateSystem,
+    updateRepo: ubuntuplatform.updateRepo
 });
