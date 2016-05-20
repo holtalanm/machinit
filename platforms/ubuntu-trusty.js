@@ -1,27 +1,50 @@
 var registry = require('../utils/platform-registry.js');
 var shell = require('shelljs');
 var urlparse = require('url-parse');
-var defaultInitDir = '/opt/machinit';
+var simplegit = require('simple-git');
 
-function ensureGitRepo(repo, gitdir) {
+function ensureGitRepo(sg, cb) {
     if(!shell.which('git')) {
-        shell.exec('sudo apt-get install git -y -q');
+        return cb("Machinit requires git to work. Please install git before running Machinit.");
     }
-    var status = shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' status');
-    var isGit = status.stdout.indexOf('branch') > -1
-    if(!isGit) {
-        shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' init');
-    }
+    return sg.status((err, data) => {
+        if(err) {
+            if(err.toString().toLowerCase().indexOf('not a git') > -1) {
+                data = err;
+            }
+            else return cb(err);
+        }
+        if(data.toString().toLowerCase().indexOf('not a git') > -1) {
+            sg.init(false, (err, data) => {
+                if(err) return cb(err);
+                return cb(null);
+            });
+        } else return cb(null);
+    });
 }
 
-function ensureRemoteAdded(repo, gitdir, repourl) {
-    ensureRemoteRemoved(repo, gitdir);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote add origin ' + repourl);
+function ensureRemoteAdded(sg, repourl, cb) {
+    ensureRemoteRemoved(sg, (err) => {
+        if(err) return cb(err);
+        sg.addRemote('machinit', repourl, (err, data) => {
+            if(err) return cb(err);
+            return cb(null);
+        });
+    });
 }
 
-function ensureRemoteRemoved(repo, gitdir) {
-    ensureGitRepo(repo, gitdir);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' remote remove origin');
+function ensureRemoteRemoved(sg, cb) {
+    ensureGitRepo(sg, (err) => {
+        if(err) return cb(err);
+        sg.removeRemote('machinit', (err, data) => {
+            if(err) {
+                if(!(err.toString().toLowerCase().indexOf('could not remove') > -1)) {
+                    return cb(err);
+                }
+            }
+            return cb(null);
+        });
+    });
 }
 
 function check() {
@@ -32,7 +55,8 @@ function check() {
 function setGitAuthOnRemote(data, remote) {
     if(data.gitusername && data.gitpassword) {
         var parsedremote = urlparse(remote);
-        parsedremote.set('auth', data.gitusername + ':' + data.gitpassword);
+        parsedremote.set('username', encodeURIComponent(data.gitusername));
+        parsedremote.set('password', encodeURIComponent(data.gitpassword));
         remote = parsedremote.toString();
         console.log(remote);
     }
@@ -41,39 +65,38 @@ function setGitAuthOnRemote(data, remote) {
 
 function updateSystem(data) {
     var repo = data.localrepo;
-    var gitdir = repo + '/.git';
     var remote = setGitAuthOnRemote(data, data.remote);
-    ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' reset HEAD --hard');
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' fetch origin');
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree=' + repo + ' pull origin');
+    var sg = simplegit(repo);
+    ensureRemoteAdded(sg, remote, (err) => {
+        if(err) return console.log(err);
+        sg.fetch('machinit', 'master', (err, data) => {
+            if(err) return console.log(err);
+            sg.pull('machinit', 'master', (err, data) => {
+                if(err) return console.log(err);
+                ensureRemoteRemoved(sg, (err) => {
+                    if(err) return console.log(err);
 
-    ensureRemoteRemoved(repo, gitdir);
+                    for(var i = 0; i < data.files.length; i++) {
+                        var file = data.files[i];
+                        var filename = file.name;
+                        var repopath = repo + '/' + file.repofolder;
+                        var systempath = file.platforms[data.currentplatform].path;
 
-    for(var i = 0; i < data.packages.length; i++) {
-        var package = data.packages[i];
-        var platformCommands = package.platforms[data.currentplatform].commands;
-        for(var j = 0; j < platformCommands.length; j++) {
-            var command = platformCommands[j];
-            shell.exec(command);
-        }
-    }
+                        shell.mkdir('-p', systempath);
+                        shell.cp('-rf', repopath + '/' + filename, systempath + '/' + filename);
+                    }
+                });
+            });
 
-    for(var i = 0; i < data.files.length; i++) {
-        var file = data.files[i];
-        var filename = file.name;
-        var repopath = repo + '/' + file.repofolder;
-        var systempath = file.platforms[data.currentplatform].path;
+        });
 
-        shell.mkdir('-p', systempath);
-        shell.cp('-rf', repopath + '/' + filename, systempath + '/' + filename);
-    }
+    });
 }
 
 function updateRepo(data) {
     var repo = data.localrepo;
-    var gitdir = repo + '/.git';
     var remote = setGitAuthOnRemote(data, data.remote);
+    var sg = simplegit(repo);
     for(var i = 0; i < data.files.length; i++) {
         var file = data.files[i];
         var filename = file.name;
@@ -84,11 +107,24 @@ function updateRepo(data) {
         shell.cp('-rf', systempath, repopath + '/' + filename);
     }
 
-    ensureGitRepo(repo, gitdir);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' commit -a -m \'updated repository from system\'');
-    ensureRemoteAdded(repo, gitdir, remote);
-    shell.exec('sudo git --git-dir=' + gitdir + ' --work-tree ' + repo + ' push origin master');
-    ensureRemoteRemoved(repo, gitdir);
+    ensureGitRepo(sg, (err) => {
+        if(err) return console.log(err);
+        sg.add('--all', (err, data) => {
+            if(err) return console.log(err);
+            sg.commit('Updated machinit repo', (err, data) => {
+                if(err) return console.log(err);
+                ensureRemoteAdded(sg, remote, (err) => {
+                    if(err) return console.log(err);
+                    sg.push('machinit', 'master', (err, data) => {
+                        if(err) return console.log(err);
+                        ensureRemoteRemoved(sg, (err) => {
+                            if(err) return console.log(err);
+                        });
+                    });
+                });
+            });
+        });
+    });
 }
 
 module.exports = registry.register({

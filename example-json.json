@@ -1,31 +1,55 @@
 {
-    'platforms': [
-        'Ubuntu 16.04'
+    "platforms": [
+        "Ubuntu 16.04",
+        "Ubuntu 14.04"
     ],
-    'repository': 'auto',
-    'packages': [
+    "remote": "https://bitbucket.org/holtalanm/machinit-test.git",
+    "files": [
         {
-            'name': 'Mongo DB',
-            'platforms': {
-                'Ubuntu 16.04': {
-                    'commands': [
-                        'apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927',
-                        'echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list',
-                        'apt-get install -y --allow-unauthenticated mongodb',
-                        'echo "[Unit]\nDescription=High-performance, schema-free document-oriented database\nAfter=network.target\n\n[Service]\nUser=mongodb\nExecStart=/usr/bin/mongod --quiet --config /etc/mongod.conf\n\n[Install]\nWantedBy=multi-user.target" | tee /etc/systemd/system/mongodb.service',
-                        'systemctl start mongodb',
-                        'systemctl enable mongodb'
-                    ]
+            "name": ".bashrc",
+            "repofolder": "home",
+            "platforms": {
+                "Ubuntu 16.04": {
+                    "path": "~/"
+                },
+                "Ubuntu 14.04": {
+                    "path": "~/"
                 }
             }
-        }
-    ],
-    'files': [
+        },
         {
-            'repopath': 'home/.bashrc',
-            'platforms': {
-                'Ubuntu 16.04': {
-                    'path': '~/.bashrc'
+            "name": ".profile",
+            "repofolder": "home",
+            "platforms": {
+                "Ubuntu 16.04": {
+                    "path": "~/"
+                },
+                "Ubuntu 14.04": {
+                    "path": "~/"
+                }
+            }
+        },
+        {
+            "name": ".ssh",
+            "repofolder": "home",
+            "platforms": {
+                "Ubuntu 16.04": {
+                    "path": "~/"
+                },
+                "Ubuntu 14.04": {
+                    "path": "~/"
+                }
+            }
+        },
+        {
+            "name": "LightTable",
+            "repofolder": "home/config",
+            "platforms": {
+                "Ubuntu 16.04": {
+                    "path": "~/.config/"
+                },
+                "Ubuntu 14.04": {
+                    "path": "~/.config/"
                 }
             }
         }
