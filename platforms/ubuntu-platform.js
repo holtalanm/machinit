@@ -6,6 +6,10 @@ function ensureSudo() {
     shell.exec('sudo whoami >> /dev/null');
 }
 
+function ensureGitCryptInstalled() {
+    return !!shell.which('git-crypt');
+}
+
 function ensureGitRepo(sg, cb) {
     if(!shell.which('git')) {
         return cb("Machinit requires git to work. Please install git before running Machinit.");
@@ -74,7 +78,18 @@ function updateSystem(data) {
                 if(err) return console.log(err);
                 ensureRemoteRemoved(sg, (err) => {
                     if(err) return console.log(err);
-
+                    if(data.encryption) {
+                        var gitCryptDetected = ensureGitCryptInstalled();
+                        if(!gitCryptDetected) {
+                            console.log('git-crypt is required for git repository encryption.  Please install it using instructions that can be found at https://github.com/AGWA/git-crypt');
+                            return;
+                        }
+                        if(!data.keypath) {
+                            console.log('attempting to update from encrypted repository.  Please specify a key path using --key');
+                            return;
+                        }
+                        shell.exec('cd ' + repo + ' && git-crypt unlock ' + data.keypath);
+                    }
                     for(var i = 0; i < data.files.length; i++) {
                         var file = data.files[i];
                         var filename = file.name;
@@ -84,6 +99,7 @@ function updateSystem(data) {
                         shell.mkdir('-p', systempath);
                         shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
                     }
+                    shell.exec('sudo rm -rf ' + repo);
                 });
             });
 
@@ -108,6 +124,9 @@ function updateRepo(data) {
 
     ensureGitRepo(sg, (err) => {
         if(err) return console.log(err);
+        //TODO:  Check if data encrypted.
+        //TODO:  Construct gitattributes.  If exists, delete and reconstruct
+        //TODO:  Export encryption key
         sg.add('--all', (err, data) => {
             if(err) return console.log(err);
             sg.commit('Updated machinit repo', (err, data) => {
@@ -118,6 +137,7 @@ function updateRepo(data) {
                         if(err) return console.log(err);
                         ensureRemoteRemoved(sg, (err) => {
                             if(err) return console.log(err);
+                            shell.exec('sudo rm -rf ' + repo);
                         });
                     });
                 });
@@ -142,9 +162,9 @@ function installPackages(data) {
             var command = commands[j];
             var commandresult = shell.exec(commands[j]);
             if(commandresult.stderr.toString().length > 0) {
-                console.log('Error detected installing package.  Skipping package.');
+                console.log('Error detected installing package.');
+                console.log('Error: ' + commandresult.stderr.toString());
                 failed = true;
-                break;
             }
         }
         if(!failed) console.log('Package installed!');

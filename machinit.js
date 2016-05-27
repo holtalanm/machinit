@@ -14,7 +14,8 @@ const cli = clc([
             { name: 'dir', type: String },
             { name: 'gituser', type: String },
             { name: 'gitpw', type: String },
-            { name: 'fp', type: String }
+            { name: 'fp', type: String },
+            { name: 'key', type: String }
         ]
     },
     {
@@ -23,7 +24,8 @@ const cli = clc([
             { name: 'dir', type: String },
             { name: 'gituser', type: String },
             { name: 'gitpw', type: String },
-            { name: 'fp', type: String }
+            { name: 'fp', type: String },
+            { name: 'key', type: String }
         ]
     },
     {
@@ -87,11 +89,13 @@ if(!platform) {
             var dir = command.options.dir;
             var gituser = command.options.gituser;
             var gitpw = command.options.gitpw;
+            var keypath = command.options.key;
             var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
             if(content) {
                 content.localrepo = dir;
                 content.gitusername = gituser;
                 content.gitpassword = gitpw;
+                content.keypath = keypath;
                 platform.updateRepo(content);
             }
             break;
@@ -99,11 +103,13 @@ if(!platform) {
             var dir = command.options.dir;
             var gituser = command.options.gituser;
             var gitpw = command.options.gitpw;
+            var keypath = command.options.key;
             var content = getFileContent(command.options.fp ? command.options.fp : dir + '/machinit.json', platform);
             if(content) {
                 content.localrepo = dir;
                 content.gitusername = gituser;
                 content.gitpassword = gitpw;
+                content.keypath = keypath;
                 platform.updateSystem(content);
             }
             break;

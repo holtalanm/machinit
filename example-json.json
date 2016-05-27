@@ -4,7 +4,31 @@
         "Ubuntu 14.04"
     ],
     "remote": "https://bitbucket.org/holtalanm/machinit-test.git",
+    "encryption": "true",
     "packages": [
+        {
+            "name": "git",
+            "platforms": {
+                "Ubuntu 14.04": {
+                    "commands": [
+                        "sudo apt-get install -q -y git"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "git-crypt",
+            "platforms": {
+                "Ubuntu 14.04": {
+                    "commands": [
+                        "sudo apt-get install -q -y make g++ libssl-dev",
+                        "sudo rm -rf ~/git-crypt && git clone https://github.com/AGWA/git-crypt ~/git-crypt",
+                        "cd ~/git-crypt && sudo make && sudo make install PREFIX=/usr/local",
+                        "sudo rm -rf ~/git-crypt"
+                    ]
+                }
+            }
+        },
         {
             "name": "Mongo DB",
             "platforms": {
