@@ -19,5 +19,6 @@ module.exports = registry.register({
     ],
     check: check,
     updateSystem: ubuntuplatform.updateSystem,
-    updateRepo: ubuntuplatform.updateRepo
+    updateRepo: ubuntuplatform.updateRepo,
+    installPackages: ubuntuplatform.installPackages
 });

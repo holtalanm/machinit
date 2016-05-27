@@ -25,6 +25,12 @@ const cli = clc([
             { name: 'gitpw', type: String },
             { name: 'fp', type: String }
         ]
+    },
+    {
+        name: 'install-packages',
+        definitions: [
+            { name: 'fp', type: String }
+        ]
     }
 ]);
 
@@ -70,6 +76,9 @@ if(!platform) {
             console.log('\t\toptions:');
             console.log('\t\t\tdir: the directory path for the repository (required)');
             console.log('\t\t\tfp: the file path for the json file to read.  If not specified, looks for machinit.json within the repository directory.  (optional)');
+            console.log('\tinstall-packages: (ex. "machinit install-packages --fp /opt/machinit/is/awesome.json") installs packages specified from within the json file');
+            console.log('\t\toptions:');
+            console.log('\t\t\tfp: the file path for the json file to read.  Must be specified.');
             break;
         case 'platform':
             console.log(platform.name);
@@ -96,6 +105,17 @@ if(!platform) {
                 content.gitusername = gituser;
                 content.gitpassword = gitpw;
                 platform.updateSystem(content);
+            }
+            break;
+        case 'install-packages':
+            var fp = command.options.fp;
+            if(!fp){
+                console.log('file path must be specified with --fp');
+                break;
+            }
+            var content = getFileContent(fp, platform);
+            if(content) {
+                platform.installPackages(content);
             }
             break;
         default:

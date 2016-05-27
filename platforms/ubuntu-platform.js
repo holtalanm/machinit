@@ -2,6 +2,10 @@ var shell = require('shelljs');
 var urlparse = require('url-parse');
 var simplegit = require('simple-git');
 
+function ensureSudo() {
+    shell.exec('sudo whoami >> /dev/null');
+}
+
 function ensureGitRepo(sg, cb) {
     if(!shell.which('git')) {
         return cb("Machinit requires git to work. Please install git before running Machinit.");
@@ -58,6 +62,7 @@ function setGitAuthOnRemote(data, remote) {
 }
 
 function updateSystem(data) {
+    ensureSudo();
     var repo = data.localrepo;
     var remote = setGitAuthOnRemote(data, data.remote);
     var sg = simplegit(repo);
@@ -77,7 +82,7 @@ function updateSystem(data) {
                         var systempath = file.platforms[data.currentplatform].path;
 
                         shell.mkdir('-p', systempath);
-                        shell.cp('-rf', repopath + '/' + filename, systempath + '/' + filename);
+                        shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
                     }
                 });
             });
@@ -121,7 +126,34 @@ function updateRepo(data) {
     });
 }
 
+function installPackages(data) {
+    ensureSudo();
+    for(var i = 0; i < data.packages.length; i++) {
+        var package = data.packages[i];
+        var platformpackage = package.platforms[data.currentplatform];
+        if(!platformpackage) {
+            console.log('Skipping package: ' + package.name + '.  Platform not specified for package.');
+            continue;
+        }
+        console.log('Installing package: ' + package.name);
+        var commands = platformpackage.commands;
+        var failed;
+        for(var j = 0; j < commands.length; j++) {
+            var command = commands[j];
+            var commandresult = shell.exec(commands[j]);
+            if(commandresult.stderr.toString().length > 0) {
+                console.log('Error detected installing package.  Skipping package.');
+                failed = true;
+                break;
+            }
+        }
+        if(!failed) console.log('Package installed!');
+        else console.log('Error(s) detected in package installation.  Package may not have been installed.');
+    }
+}
+
 module.exports = {
     updateRepo: updateRepo,
-    updateSystem: updateSystem
+    updateSystem: updateSystem,
+    installPackages: installPackages
 };

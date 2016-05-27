@@ -1,7 +1,7 @@
 const registry = {};
 
 function registerPlatform(platform) {
-    if(!platform.name || !platform.aliasArray || !platform.check || !platform.updateSystem || !platform.updateRepo) {
+    if(!platform.name || !platform.aliasArray || !platform.check || !platform.updateSystem || !platform.updateRepo || !platform.installPackages) {
         console.error('Invalid Platform: ' + platform);
         return;
     }
