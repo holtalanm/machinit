@@ -102,6 +102,7 @@
         },
         {
             "name": ".ssh",
+            "encryption": "true",
             "repofolder": "home",
             "platforms": {
                 "Ubuntu 16.04": {

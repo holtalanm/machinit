@@ -1,6 +1,9 @@
 var shell = require('shelljs');
 var urlparse = require('url-parse');
 var simplegit = require('simple-git');
+var sprintf = require("sprintf-js").sprintf,
+    vsprintf = require("sprintf-js").vsprintf;
+var fs = require('fs');
 
 function ensureSudo() {
     shell.exec('sudo whoami >> /dev/null');
@@ -112,11 +115,16 @@ function updateRepo(data) {
     var repo = data.localrepo;
     var remote = setGitAuthOnRemote(data, data.remote);
     var sg = simplegit(repo);
+    var encryptedfiles = [];
     for(var i = 0; i < data.files.length; i++) {
         var file = data.files[i];
         var filename = file.name;
         var repopath = repo + '/' + file.repofolder;
         var systempath = file.platforms[data.currentplatform].path + '/' + filename;
+
+        if(!!file.encryption) {
+            encryptedfiles.push(file.repofolder + '/' + filename);
+        }
 
         shell.mkdir('-p', repopath);
         shell.cp('-rf', systempath, repopath + '/' + filename);
@@ -124,25 +132,52 @@ function updateRepo(data) {
 
     ensureGitRepo(sg, (err) => {
         if(err) return console.log(err);
-        //TODO:  Check if data encrypted.
-        //TODO:  Construct gitattributes.  If exists, delete and reconstruct
-        //TODO:  Export encryption key
-        sg.add('--all', (err, data) => {
-            if(err) return console.log(err);
-            sg.commit('Updated machinit repo', (err, data) => {
+        function performGitOps(postpush) {
+            sg.add('--all', (err, info) => {
                 if(err) return console.log(err);
-                ensureRemoteAdded(sg, remote, (err) => {
+                sg.commit('Updated machinit repo', (err, info) => {
                     if(err) return console.log(err);
-                    sg.push('machinit', 'master', (err, data) => {
+                    ensureRemoteAdded(sg, remote, (err) => {
                         if(err) return console.log(err);
-                        ensureRemoteRemoved(sg, (err) => {
+                        sg.push(['--force', 'machinit'], 'master', (err, info) => {
                             if(err) return console.log(err);
+                            if(!!postpush) postpush();
                             shell.exec('sudo rm -rf ' + repo);
                         });
                     });
                 });
             });
-        });
+        }
+        if(data.encryption) {
+            var gitCryptDetected = ensureGitCryptInstalled();
+            if(!gitCryptDetected) {
+                console.log('git-crypt is required for git repository encryption.  Please install it using instructions that can be found at https://github.com/AGWA/git-crypt');
+                return;
+            }
+            if(!data.keypath) {
+                console.log('attempting to update from encrypted repository.  Please specify a key path using --key');
+                return;
+            }
+            shell.exec('cd ' + repo + ' && git-crypt init');
+            var gitattributeslinetemplate = '%s filter=git-crypt diff=git-crypt\n';
+            var gitattributespath = repo + '/.gitattributes';
+            var writeStream = fs.createWriteStream(gitattributespath);
+            for(var i = 0; i < encryptedfiles.length; i++) {
+                writeStream.write(sprintf(gitattributeslinetemplate, encryptedfiles[i]));
+            }
+            writeStream.close();
+            sg.add(gitattributespath, (err, info) => {
+                if(err) return console.log(err);
+                sg.commit('Update gitattributes for encryption', (err, info) => {
+                    if(err) return console.log(err);
+                    performGitOps(() => {
+                        shell.exec('cd ' + repo + ' && git-crypt export-key ' + data.keypath);
+                        console.log('git-crypt encryption key exported to: ' + data.keypath);
+                    });
+                });
+            });
+        }
+        else performGitOps();
     });
 }
 
