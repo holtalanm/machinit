@@ -1,6 +1,6 @@
 {
   "name": "machinit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Allows for initializing a newly created machine using a lightweight and simple form factor (json).",
   "main": "machinit.js",
   "bin": {
@@ -23,9 +23,9 @@
     "simple-git": "~1.35.0",
     "sprintf-js": "~1.0.3"
   },
-  "repository" : {
-      "type" : "git",
-      "url" : "https://github.com/holtalanm/machinit.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holtalanm/machinit.git"
   },
   "readme": "# machinit\n\nProvides a simple way of syncing files between different machines using git.\n\nCurrently, only supports Ubuntu 14.04 and 16.04, but that should hit the majority of the users.\n\nYou can run machinit currently by running 'sudo node machinit.js help' to get a list of possible commands and options.\n",
   "readmeFilename": "README.md",
