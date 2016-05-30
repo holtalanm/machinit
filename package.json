@@ -1,21 +1,33 @@
 {
-    "name": "machinit",
-    "version": "0.0.1",
-    "description": "Allows for initializing a newly created machine using a lightweight and simple form factor (json).",
-    "main": "machinit.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Alan Holt",
-    "license": "ISC",
-    "dependencies": {
-        "command-line-commands": "~0.1.2",
-        "platform": "~1.3.1",
-        "shelljs": "~0.7.0",
-        "auto-load": "~2.1.0",
-        "jsonfile": "~2.3.1",
-        "url-parse": "~1.1.1",
-        "simple-git": "~1.35.0",
-        "sprintf-js": "~1.0.3"
-    }
+  "name": "machinit",
+  "version": "0.0.1",
+  "description": "Allows for initializing a newly created machine using a lightweight and simple form factor (json).",
+  "main": "machinit.js",
+  "bin": {
+    "machinit": "bin/machinit-exec.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Alan Holt"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "command-line-commands": "~0.1.2",
+    "platform": "~1.3.1",
+    "shelljs": "~0.7.0",
+    "require-all": "~2.0.0",
+    "jsonfile": "~2.3.1",
+    "url-parse": "~1.1.1",
+    "simple-git": "~1.35.0",
+    "sprintf-js": "~1.0.3"
+  },
+  "readme": "# machinit\n\nProvides a simple way of syncing files between different machines using git.\n\nCurrently, only supports Ubuntu 14.04 and 16.04, but that should hit the majority of the users.\n\nYou can run machinit currently by running 'sudo node machinit.js help' to get a list of possible commands and options.\n",
+  "readmeFilename": "README.md",
+  "gitHead": "aced3a3cb212075486f8921adefdee5277d1b199",
+  "_id": "machinit@0.0.1",
+  "_shasum": "e6db90a6be810cee61743ffe912c4310dbfe6e3c",
+  "_from": "../../opt/workspaces/node/machinit",
+  "_resolved": "file:../../opt/workspaces/node/machinit"
 }
