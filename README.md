@@ -1,6 +1,6 @@
 # machinit
 
-[![npm Package]()](https://www.npmjs.org/package/machinit)
+[![npm Package](https://img.shields.io/npm/v/machinit.svg?style=flat-square)](https://www.npmjs.org/package/machinit)
 
 Provides a simple way of syncing files between different machines using git.
 
