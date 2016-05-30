@@ -79,6 +79,7 @@
         {
             "name": ".bashrc",
             "repofolder": "home",
+            "directory": "false",
             "platforms": {
                 "Ubuntu 16.04": {
                     "path": "~/"
@@ -91,6 +92,7 @@
         {
             "name": ".profile",
             "repofolder": "home",
+            "directory": "false",
             "platforms": {
                 "Ubuntu 16.04": {
                     "path": "~/"
@@ -104,6 +106,7 @@
             "name": ".ssh",
             "encryption": "true",
             "repofolder": "home",
+            "directory": "true",
             "platforms": {
                 "Ubuntu 16.04": {
                     "path": "~/"
@@ -116,6 +119,7 @@
         {
             "name": "LightTable",
             "repofolder": "home/config",
+            "directory": "true",
             "platforms": {
                 "Ubuntu 16.04": {
                     "path": "~/.config/"

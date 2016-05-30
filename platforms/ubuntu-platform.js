@@ -68,47 +68,45 @@ function setGitAuthOnRemote(data, remote) {
     return remote;
 }
 
+function logError(err, info) {
+    if(!!info) {
+        console.log(info);
+    }
+    console.log(err);
+}
+
 function updateSystem(data) {
     ensureSudo();
     var repo = data.localrepo;
     var remote = setGitAuthOnRemote(data, data.remote);
-    var sg = simplegit(repo);
-    ensureRemoteAdded(sg, remote, (err) => {
-        if(err) return console.log(err);
-        sg.fetch('machinit', 'master', (err, data) => {
-            if(err) return console.log(err);
-            sg.pull('machinit', 'master', (err, data) => {
-                if(err) return console.log(err);
-                ensureRemoteRemoved(sg, (err) => {
-                    if(err) return console.log(err);
-                    if(data.encryption) {
-                        var gitCryptDetected = ensureGitCryptInstalled();
-                        if(!gitCryptDetected) {
-                            console.log('git-crypt is required for git repository encryption.  Please install it using instructions that can be found at https://github.com/AGWA/git-crypt');
-                            return;
-                        }
-                        if(!data.keypath) {
-                            console.log('attempting to update from encrypted repository.  Please specify a key path using --key');
-                            return;
-                        }
-                        shell.exec('cd ' + repo + ' && git-crypt unlock ' + data.keypath);
-                    }
-                    for(var i = 0; i < data.files.length; i++) {
-                        var file = data.files[i];
-                        var filename = file.name;
-                        var repopath = repo + '/' + file.repofolder;
-                        var systempath = file.platforms[data.currentplatform].path;
+    var sg = simplegit();
+    shell.exec('sudo rm -rf ' + repo);
+    sg.clone(remote, repo, (err) => {
+        if(err) return logError(err, 'error occurred while cloning remote:');
+        if(data.encryption) {
+            var gitCryptDetected = ensureGitCryptInstalled();
+            if(!gitCryptDetected) {
+                console.log('git-crypt is required for git repository encryption.  Please install it using instructions that can be found at https://github.com/AGWA/git-crypt');
+                return;
+            }
+            if(!data.keypath) {
+                console.log('attempting to update from encrypted repository.  Please specify a key path using --key');
+                return;
+            }
+            shell.exec('cd ' + repo + ' && git-crypt unlock ' + data.keypath);
+        }
+        for(var i = 0; i < data.files.length; i++) {
+            var file = data.files[i];
+            var filename = file.name;
+            var repopath = repo + '/' + file.repofolder;
+            var systempath = file.platforms[data.currentplatform].path;
 
-                        shell.mkdir('-p', systempath);
-                        shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
-                    }
-                    shell.exec('sudo rm -rf ' + repo);
-                });
-            });
-
-        });
-
+            shell.mkdir('-p', systempath);
+            shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
+        }
+        shell.exec('sudo rm -rf ' + repo);
     });
+
 }
 
 function updateRepo(data) {
@@ -123,7 +121,11 @@ function updateRepo(data) {
         var systempath = file.platforms[data.currentplatform].path + '/' + filename;
 
         if(!!file.encryption) {
-            encryptedfiles.push(file.repofolder + '/' + filename);
+            var repolocal = file.repofolder + '/' + filename;
+            if(!!file.directory) {
+                repolocal += '/*';
+            }
+            encryptedfiles.push(repolocal);
         }
 
         shell.mkdir('-p', repopath);
@@ -131,17 +133,17 @@ function updateRepo(data) {
     }
 
     ensureGitRepo(sg, (err) => {
-        if(err) return console.log(err);
-        function performGitOps(postpush) {
+        if(err) return logError(err, 'error occurred while initializing git repo:');
+        function performGitOps(postAdd) {
             sg.add('--all', (err, info) => {
-                if(err) return console.log(err);
+                if(err) return logError(err, 'error occurred while adding files to repo:');
                 sg.commit('Updated machinit repo', (err, info) => {
-                    if(err) return console.log(err);
+                    if(err) return logError(err, 'error occurred while committing to repo:');
+                    if(!!postAdd) postAdd();
                     ensureRemoteAdded(sg, remote, (err) => {
-                        if(err) return console.log(err);
-                        sg.push(['--force', 'machinit'], 'master', (err, info) => {
-                            if(err) return console.log(err);
-                            if(!!postpush) postpush();
+                        if(err) return logError(err, 'error occurred while adding remote:');
+                        sg.push(['-f', 'machinit', 'master'], (err, info) => {
+                            if(err) return logError(err, 'error occurred while pushing to remote:');
                             shell.exec('sudo rm -rf ' + repo);
                         });
                     });
@@ -166,10 +168,10 @@ function updateRepo(data) {
                 writeStream.write(sprintf(gitattributeslinetemplate, encryptedfiles[i]));
             }
             writeStream.close();
-            sg.add(gitattributespath, (err, info) => {
-                if(err) return console.log(err);
+            sg.add('.gitattributes', (err, info) => {
+                if(err) return logError(err, 'error occurred while adding gitattributes file:');
                 sg.commit('Update gitattributes for encryption', (err, info) => {
-                    if(err) return console.log(err);
+                    if(err) return logError(err, 'error occurred while committing gitattributes file:');
                     performGitOps(() => {
                         shell.exec('cd ' + repo + ' && git-crypt export-key ' + data.keypath);
                         console.log('git-crypt encryption key exported to: ' + data.keypath);
