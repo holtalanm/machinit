@@ -2,6 +2,7 @@ const clc = require('command-line-commands');
 const autoload = require('auto-load');
 const jsonfile = require('jsonfile');
 const platforms = require('./utils/platform-registry.js');
+const cmdutil = require('./utils/commandutil.js');
 autoload('./platforms');
 
 
@@ -66,21 +67,47 @@ if(!platform) {
 } else {
     switch(command.name) {
         case 'help':
+            var updateargs = [{
+                name: 'dir',
+                desc: 'the directory path for the repository'
+            }, {
+                name: 'gituser',
+                desc: 'the git username for the remote repository'
+            }, {
+                name: 'gitpw',
+                desc: 'the git password for the remote repository'
+            }, {
+                name: 'fp',
+                desc: 'the file path for the json file containing the machinit configuration for this command'
+            }, {
+                name: 'key',
+                desc: 'the file path for the exported encryption key used for decrypting any files that were specified for encryption'
+            }];
             console.log('Machinit.  The simple way of syncing files between your machines using git.');
             console.log('commands:');
-            console.log('\thelp:  (ex. "machinit help") lists out the information about the commands and what they do.');
-            console.log('\tplatform: (ex. "machinit platform") prints out the current plaform\'s name, also checks if the current platform is supported');
-            console.log('\tupdate-repo: (ex. "machinit update-repo --dir /opt/machinit/is/awesome") updates the given directory by reading the file called machinit.json within the given directroy');
-            console.log('\t\toptions:');
-            console.log('\t\t\tdir: the directory path for the repository (required)');
-            console.log('\t\t\tfp: the file path for the json file to read.  If not specified, looks for machinit.json within the repository directory.  (optional)');
-            console.log('\tupdate-system: (ex. "machinit update-system --dir /opt/machinit/is/awesome") updates the current system by reading the file called machinit.json within the given directroy');
-            console.log('\t\toptions:');
-            console.log('\t\t\tdir: the directory path for the repository (required)');
-            console.log('\t\t\tfp: the file path for the json file to read.  If not specified, looks for machinit.json within the repository directory.  (optional)');
-            console.log('\tinstall-packages: (ex. "machinit install-packages --fp /opt/machinit/is/awesome.json") installs packages specified from within the json file');
-            console.log('\t\toptions:');
-            console.log('\t\t\tfp: the file path for the json file to read.  Must be specified.');
+            cmdutil.logHelp({
+                name: 'help',
+                desc: 'lists out the information about the commands and what they do.'
+            }, [], 'machinit help');
+            cmdutil.logHelp({
+                name: 'platform',
+                desc: 'prints out the current platform\'s name. Also checks if the current planform is supported.'
+            }, [], 'machinit platform');
+            cmdutil.logHelp({
+                name: 'update-repo',
+                desc: 'updates the given directory by reading the file from the given file path.  Will init git repository to the directory given. Directory will be removed after update`'
+            }, updateargs, 'machinit update-repo --dir /opt/machinit/is/awesome --gituser machinit --gitpw isawesome --fp /opt/machinit.json --key /opt/machinit-key');
+            cmdutil.logHelp({
+                name: 'update-system',
+                desc: 'updates the current system by reading the given json file.  Will clone a git repository at the given directory.  Directory will be removed after update.'
+            }, updateargs, 'machinit update-system --dir /opt/machinit/is/awesome --gituser machinit --gitpw isawesome --fp /opt/machinit.json --key /opt/machinit-key');
+            cmdutil.logHelp({
+                name: 'install-packages',
+                desc: 'installs packages specified from within the given json file.'
+            }, [{
+                name: 'fp',
+                desc: 'the file path for the json file to be read containing package information'
+            }], 'machinit install-packages --fp /opt/machinit.json');
             break;
         case 'platform':
             console.log(platform.name);
