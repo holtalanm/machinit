@@ -10,11 +10,19 @@ You can also install machinit globally via npm by running 'sudo npm install -g m
 After installation, you can run 'machinit help' to get a list of commands.
 
 machinit utilizes:
+
     simple-git: https://www.npmjs.com/package/simple-git
+
     command-line-commands: https://www.npmjs.com/package/command-line-commands
+
     shelljs: https://www.npmjs.com/package/shelljs
+
     require-all: https://www.npmjs.com/package/require-all
+
     url-parse: https://www.npmjs.com/package/url-parse
+
     sprintf-js: https://www.npmjs.com/package/sprintf-js
+
     jsonfile: https://www.npmjs.com/package/jsonfile
+
     git-crypt:  https://github.com/AGWA/git-crypt
