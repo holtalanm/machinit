@@ -1,6 +1,6 @@
 {
   "name": "machinit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Allows for initializing a newly created machine using a lightweight and simple form factor (json).",
   "main": "machinit.js",
   "bin": {
