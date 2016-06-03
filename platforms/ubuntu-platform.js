@@ -103,8 +103,9 @@ function updateSystem(data) {
             var sudo = !!file.sudo;
 
             shell.mkdir('-p', systempath);
-            if(sudo) shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
-            else shell.exec('cp -rf ' + repopath + '/' + filename + ' ' + systempath + '/' + filename);
+            var systemlocal = !!file.directory ? systempath : systempath + '/' + filename;
+            if(sudo) shell.exec('sudo cp -rf ' + repopath + '/' + filename + ' ' + systemlocal);
+            else shell.exec('cp -rf ' + repopath + '/' + filename + ' ' + systemlocal);
         }
         shell.exec('sudo rm -rf ' + repo);
     });
@@ -132,8 +133,12 @@ function updateRepo(data) {
         }
 
         shell.mkdir('-p', repopath);
-        if(sudo) shell.exec('sudo cp -rf ' + systempath + ' ' + repopath + '/' + filename);
-        else shell.cp('-rf', systempath, repopath + '/' + filename);
+        var repolocal = !!file.directory ? repopath : repopath + '/' + filename;
+        if(sudo) {
+          shell.exec('sudo cp -rf ' + systempath + ' ' + repolocal);
+          shell.exec('sudo chmod -R 777 ' + repopath + '/' + filename);
+        }
+        else shell.cp('-rf', systempath, repolocal);
     }
 
     ensureGitRepo(sg, (err) => {
